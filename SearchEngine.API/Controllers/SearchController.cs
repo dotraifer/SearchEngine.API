@@ -3,19 +3,18 @@ using OpenSearch.Client;
 
 namespace SearchEngine.API.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
-public class SearchController(IOpenSearchClient client) : ControllerBase
+[Route("api/[controller]")]
+public class SearchController(IOpenSearchClient client, Context context) : ControllerBase
 {
-    // GET api/search?q=stock+market+crash
     [HttpGet]
-    public async Task<ActionResult<Result>> Search([FromQuery] string q)
+    public async Task<IActionResult> Search([FromQuery] string q)
     {
         if (string.IsNullOrWhiteSpace(q))
         {
             return BadRequest("Search query cannot be empty.");
         }
-
+        
         // Build the query
         var searchResponse = await client.SearchAsync<dynamic>(s => s
                 .Query(query => query
@@ -30,23 +29,24 @@ public class SearchController(IOpenSearchClient client) : ControllerBase
                             )
                         )
                         .Functions(funcs => funcs
-                            // Recency Boost using Gauss Decay
-                            .GaussDate(g => g
-                                .Field("timestamp")
-                                .Origin(DateTime.UtcNow.ToString("yyyy-MM-dd"))
-                                .Scale("30d")
-                            )
-                            // Popularity Boost using Field Value Factor
-                            .FieldValueFactor(ff => ff
-                                .Field("clicks")
-                                .Factor(1.5)
-                                .Modifier(FieldValueFactorModifier.SquareRoot)
-                            )
+                        // Recency Boost using Gauss Decay
+                        .GaussDate(g => g
+                            .Field("scrapedAt")
+                            .Origin(DateTime.UtcNow.ToString("yyyy-MM-dd"))
+                            .Scale("7d")
+                        )
+                        // Popularity Boost using FieldValueFactor
+                        .FieldValueFactor(ff => ff
+                                .Field("clicks")          // Field to use for boosting
+                                .Factor(1.5)             // Multiply score by 1.5
+                                .Modifier(FieldValueFactorModifier.SquareRoot) // Square root transformation
+                                .Missing(0)              // Default to 0 if clicks field is missing
+                        )
                         )
                         .BoostMode(FunctionBoostMode.Sum)
                     )
                 )
-                .Size(10) // Return top 10 results
+                .Size(context.Configuration.PagesToReturn) // How much pages to return
         );
 
 
@@ -61,4 +61,25 @@ public class SearchController(IOpenSearchClient client) : ControllerBase
         // Return search results
         return Ok(searchResponse.Documents);
     }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateClick(Uri url)
+    {
+        // Update the document's click count
+        var updateResponse = await client.UpdateAsync<dynamic>(url, u => u
+            .Script(s => s
+                .Source("ctx._source.clicks += 1")
+            )
+        );
+
+        // Check for errors
+        if (!updateResponse.IsValid)
+        {
+            return StatusCode(500, updateResponse.DebugInformation);
+        }
+
+        // Return success
+        return Ok();
+    }
+    
 }
