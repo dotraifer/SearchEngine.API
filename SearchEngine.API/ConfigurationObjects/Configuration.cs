@@ -9,7 +9,4 @@ public record Configuration
     [Required, Description("Elastic configuration")]
     public required ElasticConfiguration Elastic { get; init; }
     public LogEventLevel LogLevel { get; init; } = LogEventLevel.Debug;
-
-    [DefaultValue(10)]
-    public int PagesToReturn { get; init; } = 10;
 }

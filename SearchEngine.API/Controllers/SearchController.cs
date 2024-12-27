@@ -8,7 +8,7 @@ namespace SearchEngine.API.Controllers;
 public class SearchController(IOpenSearchClient client, Context context) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Search([FromQuery] string q)
+    public async Task<IActionResult> Search([FromQuery] string q, int pagesToReturn)
     {
         if (string.IsNullOrWhiteSpace(q))
         {
@@ -23,7 +23,9 @@ public class SearchController(IOpenSearchClient client, Context context) : Contr
                             .MultiMatch(mm => mm
                                 .Query(q) // User-provided query
                                 .Fields(f => f
-                                    .Field("title^3")
+                                    .Field("title^5")
+                                    .Field("Headings^3")
+                                    .Field("Paragraphs^2")
                                     .Field("content^1")
                                 )
                             )
@@ -46,7 +48,7 @@ public class SearchController(IOpenSearchClient client, Context context) : Contr
                         .BoostMode(FunctionBoostMode.Sum)
                     )
                 )
-                .Size(context.Configuration.PagesToReturn) // How much pages to return
+                .Size(pagesToReturn) // How much pages to return
         );
 
 
@@ -60,26 +62,6 @@ public class SearchController(IOpenSearchClient client, Context context) : Contr
 
         // Return search results
         return Ok(searchResponse.Documents);
-    }
-
-    [HttpPut]
-    public async Task<IActionResult> UpdateClick(Uri url)
-    {
-        // Update the document's click count
-        var updateResponse = await client.UpdateAsync<dynamic>(url, u => u
-            .Script(s => s
-                .Source("ctx._source.clicks += 1")
-            )
-        );
-
-        // Check for errors
-        if (!updateResponse.IsValid)
-        {
-            return StatusCode(500, updateResponse.DebugInformation);
-        }
-
-        // Return success
-        return Ok();
     }
     
 }

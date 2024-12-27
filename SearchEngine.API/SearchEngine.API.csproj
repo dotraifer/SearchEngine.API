@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
         <PackageReference Include="OpenSearch.Client" Version="1.8.0" />
         <PackageReference Include="OpenSearch.Net" Version="1.8.0" />
         <PackageReference Include="Serilog" Version="4.2.0" />
