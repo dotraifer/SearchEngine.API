@@ -1,15 +1,25 @@
 using YamlDotNet.Serialization;
 
-namespace SearchEngine.API;
-
-public static class YamlParser
+namespace SearchEngine.API
 {
-    public static T Parse<T>(string yaml)
+    /// <summary>
+    /// Provides methods to parse YAML strings into objects.
+    /// </summary>
+    public static class YamlParser
     {
-        // Create the deserializer
-        var deserializer = new DeserializerBuilder().Build();
+        /// <summary>
+        /// Parses a YAML string into an object of type T.
+        /// </summary>
+        /// <typeparam name="T">The type of the object to deserialize to.</typeparam>
+        /// <param name="yaml">The YAML string to parse.</param>
+        /// <returns>An object of type T deserialized from the YAML string.</returns>
+        public static T Parse<T>(string yaml)
+        {
+            // Create the deserializer
+            var deserializer = new DeserializerBuilder().Build();
 
-        // Deserialize the YAML into the Person object
-        return deserializer.Deserialize<T>(yaml);
+            // Deserialize the YAML into the specified object type
+            return deserializer.Deserialize<T>(yaml);
+        }
     }
 }

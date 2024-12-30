@@ -3,10 +3,19 @@ using OpenSearch.Client;
 
 namespace SearchEngine.API.Controllers;
 
+/// <summary>
+/// API controller for handling search requests.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class SearchController(IOpenSearchClient client, Context context) : ControllerBase
 {
+    /// <summary>
+    /// Searches for documents based on the provided query.
+    /// </summary>
+    /// <param name="q">The search query.</param>
+    /// <param name="pagesToReturn">The number of pages to return.</param>
+    /// <returns>An <see cref="IActionResult"/> containing the search results.</returns>
     [HttpGet]
     public async Task<IActionResult> Search([FromQuery] string q, int pagesToReturn)
     {
@@ -51,9 +60,6 @@ public class SearchController(IOpenSearchClient client, Context context) : Contr
                 .Size(pagesToReturn) // How much pages to return
         );
 
-
-
-
         // Check for errors
         if (!searchResponse.IsValid)
         {
@@ -63,5 +69,4 @@ public class SearchController(IOpenSearchClient client, Context context) : Contr
         // Return search results
         return Ok(searchResponse.Documents);
     }
-    
 }
